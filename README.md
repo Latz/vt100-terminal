@@ -4,6 +4,8 @@ A classic (non-FSE) WordPress theme that replaces the traditional blog interface
 
 A classic-theme fork of [HX29 Terminal](https://github.com/Latz/hx29), with no Site Editing / block-template dependency.
 
+![VT100 Terminal screenshot](screenshot.png)
+
 ---
 
 ## Overview
