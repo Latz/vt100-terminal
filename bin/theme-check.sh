@@ -62,7 +62,6 @@ EXCLUDES=(
   --exclude='vitest.config.js'
   --exclude='src/'
   --exclude='README.md'
-  --exclude='*.png'
 )
 
 echo "Copying production files to $DIST_DIR ..."

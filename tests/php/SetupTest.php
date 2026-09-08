@@ -12,6 +12,7 @@ class SetupTest extends WP_UnitTestCase {
 
         vt100_setup();
 
+        $this->assertTrue(current_theme_supports('automatic-feed-links'));
         $this->assertTrue(current_theme_supports('post-thumbnails'));
         $this->assertTrue(current_theme_supports('responsive-embeds'));
         $this->assertTrue(current_theme_supports('html5'));
