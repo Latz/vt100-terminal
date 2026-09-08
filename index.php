@@ -11,8 +11,15 @@ get_header();
     <?php
     $posts = get_posts(['posts_per_page' => 5, 'post_status' => 'publish']);
     foreach ($posts as $i => $post) {
-        echo '<div>' . ($i + 1) . '. ' . esc_html($post->post_title) . '</div>';
+        setup_postdata($post);
+        ?>
+        <div id="post-<?php the_ID(); ?>" <?php post_class(); ?>>
+            <?php echo esc_html(($i + 1) . '. ' . get_the_title()); ?>
+            <?php wp_link_pages(['before' => '<div class="page-links">', 'after' => '</div>']); ?>
+        </div>
+        <?php
     }
+    wp_reset_postdata();
     ?>
   </div>
 </div>
