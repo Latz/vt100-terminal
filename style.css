@@ -1,0 +1,417 @@
+/*
+Theme Name: VT100 Terminal
+Description: Terminal-style classic WordPress theme with a React (wp-element) terminal UI
+Version: 1.0.0
+Requires at least: 6.0
+Tested up to: 7.0
+Requires PHP: 7.4
+Author: Latz
+License: GNU General Public License v2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: vt100-terminal
+Domain Path: /languages
+Tags: custom-colors, translation-ready, one-column
+
+VT100 Terminal WordPress Theme, Copyright 2026 Latz
+VT100 Terminal is distributed under the terms of the GNU GPL v2 or later.
+This program is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the
+Free Software Foundation; either version 2 of the License, or (at your
+option) any later version. This program is distributed in the hope that
+it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details:
+https://www.gnu.org/licenses/gpl-2.0.html
+*/
+
+/* ── Cascade layers ──────────────────────────────────────────────── */
+@layer base, overrides;
+
+/* ── Typed custom properties ─────────────────────────────────────── */
+@property --glow {
+    syntax: "<number>";
+    inherits: true;
+    initial-value: 0;
+}
+
+@property --bg {
+    syntax: "<color>";
+    inherits: true;
+    initial-value: oklch(0% 0 0);
+}
+
+@property --fg {
+    syntax: "<color>";
+    inherits: true;
+    initial-value: oklch(87.8% 0.265 142.5);
+}
+
+@property --dim {
+    syntax: "<color>";
+    inherits: true;
+    initial-value: oklch(51.3% 0.156 142.5);
+}
+
+@property --accent {
+    syntax: "<color>";
+    inherits: true;
+    initial-value: oklch(87.8% 0.265 142.5);
+}
+
+/* ── VT323 self-hosted font ──────────────────────────────────────── */
+@font-face {
+    font-family: 'GlassTTY';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('assets/fonts/glasstty.woff2') format('woff2'),
+         url('assets/fonts/glasstty.ttf') format('truetype');
+}
+
+@layer base {
+
+/* ── Theme variables (default: VT100 green) ─────────────────────── */
+:root {
+    --bg:     oklch(0% 0 0);           /* #000000 */
+    --fg:     oklch(87.8% 0.265 142.5); /* #00ff00 */
+    --dim:    oklch(51.3% 0.156 142.5); /* #008800 */
+    --accent: oklch(87.8% 0.265 142.5); /* #00ff00 */
+    --font:   'GlassTTY', 'Courier New', Courier, monospace;
+    --fsize:  22px;
+}
+
+[data-theme="b"] {
+    --bg:     oklch(13.6% 0.018 264);  /* #0d1117 */
+    --fg:     oklch(93.5% 0.009 247);  /* #e6edf3 */
+    --dim:    oklch(76.4% 0.118 234);  /* #79c0ff */
+    --accent: oklch(68.2% 0.149 251);  /* #58a6ff */
+}
+
+[data-theme="c"] {
+    --bg:     oklch(13.8% 0.06 295);   /* #1a0a2e */
+    --fg:     oklch(88% 0.06 295);     /* #e0d0ff */
+    --dim:    oklch(72% 0.2 340);      /* #ff79c6 */
+    --accent: oklch(68% 0.18 305);     /* #bf7fff */
+}
+
+[data-theme="d"] {
+    --bg:     oklch(97.3% 0.022 95);   /* #fdf6e3 */
+    --fg:     oklch(52% 0.03 220);     /* #657b83 */
+    --dim:    oklch(62% 0.1 192);      /* #2aa198 */
+    --accent: oklch(56% 0.13 237);     /* #268bd2 */
+}
+
+[data-theme="e"] {
+    --bg:     oklch(4% 0.02 60);       /* #0a0500 */
+    --fg:     oklch(79% 0.19 75);      /* #ffb000 */
+    --dim:    oklch(42% 0.1 60);       /* #7a5000 */
+    --accent: oklch(79% 0.19 75);      /* #ffb000 */
+}
+
+/* ── Reset ───────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font);
+    font-size: var(--fsize);
+    line-height: 1.4;
+    text-wrap: pretty;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
+    font-smooth: never;
+    image-rendering: pixelated;
+    text-shadow: 0 0 8px color-mix(in oklch, var(--fg) calc(var(--glow) * 100%), transparent);
+}
+
+/* Root wrapper forms an exact 100vh flex column and fills remaining space */
+.vt100-root-wrapper {
+    display: block flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    flex: 1;
+    min-height: 0;
+}
+
+/* ── React mount point ───────────────────────────────────────────── */
+#vt100-root {
+    display: block flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+}
+
+#vt100-root > * {
+    flex: 1;
+    min-height: 0;
+}
+
+/* ── Terminal container (legacy / no-JS fallback) ────────────────── */
+#terminal-container {
+    display: block flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 0;
+    background: var(--bg);
+    color: var(--fg);
+    width: 100%;
+    max-width: 160ch;
+    container-type: inline-size;
+}
+
+#terminal-output {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 8px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font);
+    font-size: var(--fsize);
+    line-height: 1.4;
+    scrollbar-color: var(--dim) var(--bg);
+    scrollbar-width: thin;
+    content-visibility: auto;
+    contain-intrinsic-size: auto 500px;
+}
+
+/* ── Input line ──────────────────────────────────────────────────── */
+#terminal-input-line {
+    display: block flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    height: 32px;
+    background: var(--bg);
+    white-space: nowrap;
+}
+
+#terminal-input-line span {
+    color: var(--fg);
+    font-weight: bold;
+    font-size: var(--fsize);
+    flex-shrink: 0;
+}
+
+#terminal-input {
+    flex: 1;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--fg);
+    font-family: var(--font);
+    font-size: var(--fsize);
+    height: 32px;
+    caret-color: var(--accent);
+}
+
+#terminal-input::placeholder { color: var(--dim); }
+
+/* ── Text helpers ────────────────────────────────────────────────── */
+.command-echo { color: var(--fg); font-weight: bold; }
+.error        { color: oklch(65% 0.22 25); } /* #ff5555 */
+.dim          { color: var(--dim); }
+.vt100-loading { color: var(--dim); }
+
+a { color: var(--accent); }
+
+/* ── CRT tube vignette ───────────────────────────────────────────── */
+#vt100-root::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9998;
+    background: radial-gradient(
+        ellipse at center,
+        transparent 65%,
+        oklch(0% 0 0 / 0.12) 85%,
+        oklch(0% 0 0 / 0.30) 100%
+    );
+}
+
+/* ── 50Hz mains hum bar ──────────────────────────────────────────── */
+@keyframes hum-bar {
+    0%   { transform: translateY(-100px); }
+    100% { transform: translateY(100vh); }
+}
+
+.hum-bar-active #vt100-root::after {
+    animation: hum-bar 3s linear forwards;
+}
+
+#vt100-root::after {
+    content: '';
+    position: fixed;
+    inset-block-start: 0;
+    inset-inline: 0;
+    height: 80px;
+    pointer-events: none;
+    z-index: 9999;
+    background: linear-gradient(
+        to bottom,
+        oklch(100% 0 0 / 0) 0%,
+        oklch(100% 0 0 / 0.03) 40%,
+        oklch(100% 0 0 / 0.03) 60%,
+        oklch(100% 0 0 / 0) 100%
+    );
+    animation: none;
+}
+
+/* ── Horizontal sync tear ────────────────────────────────────────── */
+@keyframes sync-tear {
+    0%   { transform: none; clip-path: none; opacity: 1; }
+    20%  { transform: skewX(12deg) translateX(6px); clip-path: inset(0 0 40% 0); opacity: 0.85; }
+    50%  { transform: skewX(-8deg) translateX(-4px); clip-path: inset(30% 0 0 0); opacity: 0.9; }
+    80%  { transform: skewX(4deg) translateX(2px); clip-path: none; opacity: 1; }
+    100% { transform: none; clip-path: none; opacity: 1; }
+}
+
+.sync-tear {
+    animation: sync-tear var(--tear-duration, 80ms) linear forwards;
+}
+
+/* ── No-JS fallback container ────────────────────────────────────── */
+.vt100-fallback-container {
+    padding: 16px;
+    font-family: 'Courier New', monospace;
+    background: #000;
+    color: #0f0;
+    min-height: 100vh;
+}
+
+/* ── React mount wrapper (block-editor group) ────────────────────── */
+.vt100-root-wrapper {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+/* ── Inline text helpers ──────────────────────────────────────────── */
+.vt100-highlight {
+    background: var(--fg);
+    color: var(--bg);
+}
+
+.vt100-underline {
+    text-decoration: underline;
+}
+
+/* ── Character-width measurement span (off-screen, JS-created) ──── */
+.vt100-measure-span {
+    position: absolute;
+    visibility: hidden;
+    font-family: var(--font, monospace);
+    font-size: var(--fsize, 22px);
+    white-space: pre;
+}
+
+/* ── CRT scroll-flash on the terminal wrapper ────────────────────── */
+.vt100-scroll-flash {
+    transition: opacity 50ms linear;
+    opacity: 0.94;
+}
+
+.vt100-scroll-flash-restore {
+    transition: opacity 120ms ease-out;
+    opacity: 1;
+}
+
+/* ── Key-bounce recalibration notice ─────────────────────────────── */
+.vt100-key-bounce-notice {
+    position: fixed;
+    bottom: 12px;
+    right: 16px;
+    color: var(--dim);
+    font-family: var(--font);
+    font-size: 12px;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 1;
+    transition: opacity 0.3s;
+}
+
+.vt100-key-bounce-notice.is-hidden {
+    opacity: 0;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────── */
+@container (max-width: 768px) {
+    #terminal-container { padding: 8px; }
+    #terminal-output, #terminal-input, #terminal-input-line span { font-size: 12px; }
+}
+
+} /* end @layer base */
+
+/* ── react-terminal-ui overrides ──────────────────────────────────
+   Unlayered: the library injects its own unlayered <style> tag at
+   runtime (after this stylesheet in the DOM), and unlayered CSS
+   always beats @layer rules and later same-specificity rules, so
+   these overrides must stay outside @layer AND out-specify #vt100-root
+   .react-terminal-wrapper / .react-terminal to win the cascade. ── */
+#vt100-root .react-terminal-wrapper,
+#vt100-root .react-terminal {
+    background: var(--bg);
+    color: var(--fg);
+}
+
+/* ── react-terminal-ui prompt & cursor ───────────────────────────── */
+#vt100-root .react-terminal-input[data-terminal-prompt]:before {
+    margin-right: 0.25em;
+    color: var(--fg);
+}
+
+#vt100-root .react-terminal-wrapper:focus-within .react-terminal-active-input .cursor {
+    background: var(--fg);
+    background-image: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 1px,
+        oklch(0% 0 0 / 0.45) 1px,
+        oklch(0% 0 0 / 0.45) 2px
+    );
+    width: 0.55em;
+    box-shadow: 0 0 4px var(--fg);
+}
+
+.react-terminal-line {
+    color: var(--fg);
+    font-family: var(--font);
+    font-size: var(--fsize);
+}
+
+#vt100-root .react-terminal-wrapper {
+    height: 100%;
+    display: block flex;
+    flex-direction: column;
+    padding: 45px;
+    border-radius: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+#vt100-root .react-terminal {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-width: none;
+    scroll-behavior: auto;
+    padding-bottom: 0;
+}
+
+/* VT100 smooth-scroll mode (config --scroll smooth) is animated in JS (src/dom.js,
+   _scrollToBottom) rather than via this scroll-behavior, so a browser-level smooth-scroll
+   doesn't additionally interpolate each of our own incremental scrollTop writes. */

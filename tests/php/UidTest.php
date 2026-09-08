@@ -1,0 +1,85 @@
+<?php
+/**
+ * Robustness tests for inc/uid.php (robustness.md Critical #1, #2; Medium #11, #12).
+ */
+class UidTest extends WP_UnitTestCase {
+
+    public function tear_down() {
+        unset($_COOKIE['vt100_uid']);
+        parent::tear_down();
+    }
+
+    /**
+     * #1: an array-shaped cookie (Cookie: vt100_uid[]=a) must not crash the
+     * request with a TypeError from preg_replace() returning an array.
+     */
+    public function test_array_shaped_cookie_does_not_throw() {
+        $_COOKIE['vt100_uid'] = ['a'];
+
+        $uid = vt100_get_or_create_uid();
+
+        $this->assertIsString($uid);
+        $this->assertMatchesRegularExpression('/^[a-f0-9]+$/', $uid);
+    }
+
+    public function test_valid_hex_cookie_is_returned_unchanged_with_no_option_write() {
+        update_option('vt100_user_counter', 5, false);
+        $_COOKIE['vt100_uid'] = 'abc123';
+
+        $uid = vt100_get_or_create_uid();
+
+        $this->assertSame('abc123', $uid);
+        $this->assertSame(5, (int) get_option('vt100_user_counter'));
+    }
+
+    /**
+     * #2: nothing in the codebase ever calls setcookie() to persist the
+     * minted UID back to the browser, so the "returning visitor" branch
+     * above never succeeds for a real client — every request without an
+     * incoming cookie mints a new UID and writes wp_options. This test
+     * documents that existing behavior so a future fix (e.g. actually
+     * setting the cookie) is a deliberate, visible change.
+     */
+    public function test_missing_cookie_increments_counter_on_every_call() {
+        delete_option('vt100_user_counter');
+        unset($_COOKIE['vt100_uid']);
+
+        vt100_get_or_create_uid();
+        $after_first = (int) get_option('vt100_user_counter');
+
+        vt100_get_or_create_uid();
+        $after_second = (int) get_option('vt100_user_counter');
+
+        $this->assertSame($after_first + 1, $after_second);
+    }
+
+    /**
+     * #11: an arbitrarily long hex cookie value must be capped, not echoed
+     * back unbounded into the localized JS blob.
+     */
+    public function test_long_cookie_value_is_capped_at_32_chars() {
+        $_COOKIE['vt100_uid'] = str_repeat('a', 10000);
+
+        $uid = vt100_get_or_create_uid();
+
+        $this->assertSame(32, strlen($uid));
+    }
+
+    /**
+     * #12: if the counter option is ever missing (e.g. a race right after
+     * switch_theme deletes it), the next UID must not silently restart at 1
+     * — that risks colliding with a UID already issued in a prior cycle.
+     * It should re-seed randomly instead, same as the after_setup_theme hook.
+     */
+    public function test_counter_reseeds_randomly_instead_of_restarting_at_one_when_option_missing() {
+        delete_option('vt100_user_counter');
+        unset($_COOKIE['vt100_uid']);
+
+        $uid = vt100_get_or_create_uid();
+
+        $value = hexdec($uid);
+        $this->assertGreaterThan(1, $value);
+        $this->assertGreaterThanOrEqual(0x101, $value);
+        $this->assertLessThanOrEqual(0x1000, $value);
+    }
+}
